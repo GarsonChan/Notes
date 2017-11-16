@@ -4,7 +4,7 @@
 
 webx是一个拓展spring容器（SpringEXT）、完善请求request、response等web属性的集成web环境的框架。以下是webx框架的层次图：
 
-![](/img/webx框架层次图.png)
+![](img/webx框架层次图.png)
 
 如图所示，webx基于Spring容器，在实现bean注入的同时使用了springext拓展了其功能，为后面流程执行打好基础，随后通过使用自己实现的webx Framework（增强了web各种属性）提供web的基础服务，在此基础上使用webx Turbine实现具体的网页功能。
 
