@@ -39,7 +39,7 @@ webx是一个拓展spring容器（SpringEXT）、完善请求request、response�
 
 每个schema都有一个解释器和它对应，这个解释器由服务的开发者提供，负责将符合schema定义的xml配置转换为Spring能解读的bean定义，如下图所示
 
-![](/img/spring schema.png)
+![](img/spring schema.png)
 
 这样将提供类名、property名称等工作交还给服务提供者，使服务的使用者可以用它所能理解的语言来装配服务，这就是Spring Schema带来的价值。
 
@@ -83,7 +83,7 @@ webx是一个拓展spring容器（SpringEXT）、完善请求request、response�
 
 * 组件和包：既成为了其他模块的拓展，又被其他模块拓展的模块，如上述的`<resource-loading>`调用了`<loaders>`，`<loaders>`又被`webapp-loader`等拓展，所以`<loaders>`是一个组件和包
 
-  ![](/img/springext组件和包.png)
+  ![](img/springext组件和包.png)
 
 
 
@@ -103,7 +103,7 @@ SpringExt提供了另两个解决方案：maven或eclipse插件。
 
 webxFramework完成以下一系列任务：
 
-![](/img/webxFramework任务.png)
+![](img/webxFramework任务.png)
 
 1、通过`WebxContextLoaderListener`来初始化Spring（取代Spring的`ContextLoaderListener`），源码流程可查看[这里](http://blog.csdn.net/lan861698789/article/details/53082868)；通过`LogConfiguratorListener`初始化日志系统
 
@@ -116,7 +116,7 @@ webxFramework完成以下一系列任务：
 
 下图为web请求的流程：
 
-![](/img/webx请求流程.png)
+![](img/webx请求流程.png)
 
 `WebxFrameworkFilter`调用`webxRootController`的`service`方法增强request等功能后调用`webxController`的`service`方法，最后调用不同应用的`pipeLine`流程，具体代码看[这里](http://blog.csdn.net/cpf2016/article/details/45720547)；
 
@@ -126,7 +126,7 @@ webx Turbine在webx Framework基础上实现处理页面基本流程，包括页
 
 下面是webx Turbine定义的映射规则：
 
-![](/img/webx turbine映射规则.png)
+![](img/webx turbine映射规则.png)
 
 查看[这里](http://blog.csdn.net/cpf2016/article/details/45534527)是关于webx Turbine的一些重要内容，详细内容可查看文档的第四章
 
