@@ -93,11 +93,21 @@ mysql > exit;
 
 5、防火墙开放3306端口，使得其他客户机也能连上mysql服务
 
+（1）
+
 `/sbin/iptables -I INPUT -p tcp --dport 3306-j ACCEPT`（开放3306端口）
 
 `service iptables save`保存
 
 `service iptables restart` 重启
+
+（2）
+
+`firewall-cmd --zone=public --add-port=3306/tcp --permanent`
+
+`firewall-cmd --reload`重启防火墙
+
+用第二种
 
 6、重启mysql `service mysqld restart`
 
