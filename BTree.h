@@ -1,5 +1,6 @@
 #ifndef _BTREE_H
 #define _BTREE_H
+#define m double
 #define m 3
 #define NULL (void*)0
 #endif // _BTREE_H
@@ -30,3 +31,8 @@ void InitBTree(BTree *bt);
 void SearchNode(BTree bt,int key ,Result *r);
 //²åÈë¹Ø¼ü´Ê
 void InsertKey(BTree *bt,int key,BTNode *p,int index);
+//É¾³ý¹Ø¼ü´Ê
+void DeleteKey(BTree *bt ,BTNode *node,int index);
+//ÏÔÊ¾Ê÷
+void showBTree(BTNode *bt ,int height);
+
