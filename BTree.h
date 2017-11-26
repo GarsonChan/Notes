@@ -1,6 +1,5 @@
 #ifndef _BTREE_H
 #define _BTREE_H
-#define m double
 #define m 3
 #define NULL (void*)0
 #endif // _BTREE_H
