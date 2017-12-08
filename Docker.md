@@ -4,13 +4,15 @@
 
 ### 1、docker技术简述
 
-​	Docker是一套轻量级操作系统虚拟化解决方案，它由go语言编写。它基于Linux容器技术（LXC），Namespace，Cgroup，UnionFS（联合文件系统）等技术。以下是对这几个技术的描述：
+​	Docker是一套轻量级操作系统虚拟化工具，它由go语言编写，作用类似于虚拟机。它基于Linux容器技术（LXC），Namespace，Cgroup，UnionFS（联合文件系统）等技术。以下是对这几个技术的简单描述：
 
 **namespace(命名空间)**：每个容器自己单独有一个命名空间，实现了进程和进程所使用的资源隔离，是进程彼此不可见
 
 **cgroup(控制组)(controll group)**：控制分配到容器的资源，避开多个容器同时运行时对系统资源的竞争
 
-**UnionFs(联合文件系统)**：Union文件系统（UnionFS）是一种分层、轻量级并且高性能的文件系统，它支持对 文件系统的修改作为一次提交来一层层的叠加，同时可以将不同目录挂载到同一个虚拟文件系统下(unite several directories into a single virtual filesystem)。Union 文件系统是 Docker 镜像的基础。镜像可以通过分层来进行继承，基于基础镜像（没有父镜像），可以制作各种具体的应用镜像。另外，不同 Docker 容器就可以共享一些基础的文件系统层，同时再加上自己独有的改动层，大大提高了存储的效率。
+**UnionFs(联合文件系统)**：Union文件系统（UnionFS）是一种分层、轻量级并且高性能的文件系统，它支持对 文件系统的修改作为一次提交来一层层的叠加，同时可以将不同目录挂载到同一个虚拟文件系统下(unite several directories into a single virtual filesystem)。UnionFS用到了一个资源管理技术：写时复制(`copy-on-write`)，即在原有的文件层上如果有文件修改的话，会再创建一个新的文件层叠加在上面；如果没有文件修改，则不需要创建新的资源。
+
+Union 文件系统是 Docker 镜像的基础。镜像可以通过分层来进行继承，基于基础镜像（没有父镜像），可以制作各种具体的应用镜像。例如，基于centos环境下的docker容器中搭建jdk环境的镜像。另外，不同 Docker 容器就可以共享一些基础的文件系统层，同时再加上自己独有的改动层，大大提高了存储的效率。
 
 Docker使用的简单流程：
 
@@ -22,17 +24,17 @@ Docker使用的简单流程：
 
 **docker镜像是什么：**
 
-​	docker的镜像实际上由一层一层的文件系统组成，这种层级的文件系统就是上文说到的UnionFS。在Docker镜像的最底层是bootfs。这一层与Linux/Unix系统是一样的，包含boot加载器和内核。当boot加载完成之后整个内核就都在内存中了，此时内存的使用权已由bootfs转交给内核，此时系统也会卸载bootfs。Docker在bootfs之上的一层是rootfs（根文件系统）。rootfs就是各种不同的操作系统发行版，比如Ubuntu，Centos等等。
+​	**docker的镜像实际上由一层一层的文件系统组成**，这种层级的文件系统就是上文说到的UnionFS。在Docker镜像的最底层是bootfs。这一层与Linux/Unix系统是一样的，包含boot加载器和内核。当boot加载完成之后整个内核就都在内存中了，此时内存的使用权已由bootfs转交给内核，此时系统也会卸载bootfs。Docker在bootfs之上的一层是rootfs（根文件系统），或者说是各种不同的操作系统发行版，比如Ubuntu，Centos等等。
 
 Docker镜像结构层图如下：
 
 ![](http://ot0aou666.bkt.clouddn.com/docker%E9%95%9C%E5%83%8F%E7%BB%93%E6%9E%84%E5%B1%82%E5%9B%BE.png)
 
-​	传统的Linux加载bootfs时会先将rootfs设为read-only，然后在系统自检之后将rootfs从read-only改为read-write。然后我们就可以在rootfs上进行写和读的操作了。但docker的镜像却不是这样，他在bootfs自检完毕之后并不会把rootfs的read-only改为read-write。而是利用union mount（UnionFS的一种挂载机制）将一个或多个read-only的rootfs加载到之前的read-only 的rootfs层之上。并在加载了这么多层的rootfs之后，仍然让它看起来只像一个文件系统，在docker的体系里把union mount的这些read-only层的rootfs叫做docker的镜像（image）。请注意，此时的每一层rootfs都是read-only的，也就是说我们此时还不能对其进行操作，那么我们怎样对其进行读写操作呢？
+​	传统的Linux加载bootfs时会先将rootfs设为read-only，然后在系统自检之后将rootfs从read-only改为read-write。然后我们就可以在rootfs上进行写和读的操作了。但docker的镜像却不是这样，他在bootfs自检完毕之后并不会把每层文件的read-only改为read-write。而是利用union mount（UnionFS的一种挂载机制）将一个或多个read-only的文件层加载到之前的read-only 的文件层之上。并在加载了这么多层的文件层之后，仍然让它看起来只像一个文件系统，在docker的体系里把union mount的这些read-only层的文件层叫做docker的镜像（image）。请注意，此时的每一层文件层都是read-only的，也就是说我们此时还不能对其进行操作，那么我们怎样对其进行读写操作呢？
 
 ​	答案是将docker镜像进行实例化，就是上文说的从镜像（image）变成容器（container）的过程，当镜像被实例化为容器之后，系统会为在一层或是多层的read-only的rootfs之上分配一层空的read-write的rootfs。而这个分配的动作是由docker  run命令发起的。
 
-​	当我们将一个镜像实例化为一个容器之后，docker会在read-only 的rootfs之上分配一层空的read-write的rootfs，我们对文件系统的改变实际上是在空的这层rootfs（read-write）上发生的。打个比方，如果你想修改一个文件，系统实际上是将这个在read-only层的rootfs的文件拷贝到read-write层的rootfs之中，然后对它进行修改，但read-only层的文件并不会被修改，依然存在于read-only层之中，只不过是在read-write层下被隐藏了。这种模式被称为copy on write。这是unionFS的特性。也是docker的强大之处，为什么说强大呢？它允许镜像被继承，也就是说我们想生成一套虚拟环境不用从零开始了，而只要在一个相对完善的基础环境之上来创建我们的虚拟环境就可以了，比如我们想生成一个具有tomcat环境的镜像，只要在一个装有java环境的镜像之上来创建就可以了。这也是docker便捷性的体现。
+​	当我们将一个镜像实例化为一个容器之后，docker会在read-only 的rootfs之上分配一层空的read-write的rootfs，我们对文件系统的改变实际上是在空的这层rootfs（read-write）上发生的。打个比方，如果你想修改一个文件，系统实际上是将这个在read-only层的rootfs的文件拷贝到read-write层的rootfs之中，然后对它进行修改，但read-only层的文件并不会被修改，依然存在于read-only层之中，只不过是在read-write层下被隐藏了。这种模式被称为copy on write。这是unionFS的特性，也是docker的强大之处。它允许镜像被继承，也就是说我们想生成一套虚拟环境不用从零开始了，而只要在一个相对完善的基础环境之上来创建我们的虚拟环境就可以了，比如我们想生成一个具有tomcat环境的镜像，只要在一个装有java环境的镜像之上来创建就可以了。这也是docker便捷性的体现。
 
 #### b、容器
 
@@ -309,15 +311,31 @@ fe00::0	ip6-localnet
 ff00::0	ip6-mcastprefix
 ff02::1	ip6-allnodes
 ff02::2	ip6-allrouters
-172.17.0.2	db 0a17e4d12751 mysql-server
+172.17.0.2	db 0a17e4d12751 mysql-server  
 172.17.0.3	89df90662b98
 ```
 
-可以看到两条hosts的配置，一个是数据库的ip对应的别名，容器ID，容器名称。另外一个是客户端对应的容器ID。所以这里可以使用别名连接到数据库服务端。
+可以看到两条hosts的配置，一个是数据库的ip（172.17.0.2）对应的别名，容器ID，容器名称。另外一个是客户端（172.17.0.3）对应的容器ID。所以这里可以使用别名连接到数据库服务端。
 
 **容器连接完后，我们就可以将数据库连接改为**
 
 ```java
 jdbc.jdbcUrl=jdbc:mysql://db:3306/db.shiro?useSSL=false&useUnicode=true&characterEncoding=UTF-8
 ```
+
+
+
+## 六、应用场景
+
+### 1、简化配置
+
+对于各应用的配置环境，使用docker只需要在容器中配置好创建镜像后将其push到自己的dockerhub上就能在其他地方重复使用，使用时pull下来就行
+
+### 2、多应用隔离部署
+
+当一台服务器上部署多个应用或者同一个应用的多个版本时，多个版本，文件路径、端口等资源往往会发生冲突，因此使用docker来部署多个应用，使它们各自有自己的文件系统，只要在启动容器时注意端口映射问题就行
+
+### 3、应用内部测试
+
+内部开发测试环境一般负载较低，如果使用多台虚拟机充当开发测试环境的话无疑会将大量的系统资源浪费在虚拟机上。因为docker容器没有cpu和内存上的额外开销，所以可以使用docker容器提供测试环境。
 
