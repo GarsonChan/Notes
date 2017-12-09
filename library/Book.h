@@ -1,7 +1,6 @@
 #ifndef _Book_H
 #define _Book_H
 #define m 3
-#define NULL (void*)0
 #endif // _Book_H
 
 typedef struct BookNode{
@@ -22,7 +21,8 @@ typedef struct BookTree{
 typedef struct Borrower{
     int borrowId;//借阅的图书证号
     char *name;//借阅者姓名
-    char *data;//归还期限
+    struct tm *date;//归还期限
+    struct Borrower *next;
 }Borrower;
 
 typedef struct Book{
@@ -31,7 +31,7 @@ typedef struct Book{
     char *author;//作者
     int presentNum;//现存量
     int totalNum;//总库存
-    Borrower *borrowList;//借阅链表
+    Borrower *borrowListHead;//借阅链表
 }Book;
 
 typedef struct{
@@ -50,3 +50,7 @@ void InsertKey(BookTree *bt,int key,Book *book,BookNode *p,int index);
 void DeleteKey(BookTree *bt ,BookNode *node,int index);
 //显示树
 void showBookTree(BookNode *bt ,int height);
+
+void borrowBook(BookNode *p,int index,Borrower *borrower);
+
+void showBook(BookTree bt,Result *r);

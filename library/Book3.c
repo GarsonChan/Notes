@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+#include <time.h>
 #include "Book.h"
 
 //初始化B树
@@ -12,6 +13,10 @@ void InitBookTree(BookTree *bt){
     bt->minNode = ceil(min)-1; //ceil向上取整函数
     bt->splitNode = (m+1)/2; //设置分裂点下标
     bt->root = NULL;
+    printf("\n\n初始化结果: \n--------------------------------------------------------------------");
+    printf("\n树的地址:%p ,                树的根结点地址:%p;" ,bt->maxNode,bt->minNode);
+    printf("\n树的结点关键词的最大个数:%d ,树的结点关键词的最小个数:%d;",bt->maxNode,bt->minNode);
+    printf("\n--------------------------------------------------------------------\n\n");
 }
 
 //查找关键词
@@ -157,11 +162,24 @@ BookNode* FindKey(BookNode *p ,int index){
 
     BookNode *child = p->child[index - 1];
     BookNode *node = p;
+    Borrower *next = p->book[index]->borrowListHead ,*temp;
+
     while(child != NULL){
         node = child;
         child = node->child[child->keyNum];
     }
+
     p->key[index] = node->key[node->keyNum];
+
+    temp = next;
+    while(temp != NULL){
+        temp = next;
+        if(temp == NULL)
+            break;
+        next = next->next;
+        free(temp);
+    }
+
     free(p->book[index]);
     p->book[index] = node->book[node->keyNum];
     node->book[node->keyNum] = NULL;
@@ -376,4 +394,107 @@ void showBookTree(BookNode *bt ,int height){
     }
 }
 
+void addBook(BookTree *bt,Result *r){
 
+    int key;
+    int conti;
+    Book *newBook;
+    char *newBookName;
+    char *newBookAuthor;
+
+    printf("\n\n请输入要添加书籍的id:");
+    scanf("%d" ,&key);
+
+    SearchNode(*bt ,key ,r);
+
+    if(r->flag == 1){
+        printf("\n\n该书号已存在，书名为:%s",r->node->book[r->index]->name);
+        printf("\n你是否要增加该书的库存？");
+        scanf("%d",&conti);
+        switch(conti){
+            case 1:
+                 r->node->book[r->index]->presentNum++;
+                 r->node->book[r->index]->totalNum++;
+                 printf("\n\n%s库存加一\n",r->node->book[r->index]->name);
+            case 0:
+                 break;
+        }
+        return;
+    }
+    else {
+
+        newBook = (Book*)malloc(sizeof(Book));
+        newBookName = (char*)malloc(30*sizeof(char));
+        newBookAuthor = (char*)malloc(30*sizeof(char));
+
+        newBook->id = key;
+        printf("\n\n请输入该书的书名:");
+        scanf("%s",newBookName);
+        newBook->name = newBookName;
+        printf("\n\n请输入该书的作者:");
+        scanf("%s",newBookAuthor);
+        newBook->author = newBookAuthor;
+        newBook->borrowListHead = NULL;
+
+        printf("\n\n添加结果: \n--------------------------------------------------------------------");
+        newBook->presentNum = 1;
+        newBook->totalNum = 1;
+        InsertKey(bt ,key ,newBook,r->node,r->index);
+        showBookTree(bt->root ,1);
+        printf("\n--------------------------------------------------------------------\n\n");
+        printf("\n添加成功");
+    }
+}
+
+void borrowBook(BookNode *p ,int index,Borrower *borrower){
+    Book *book = p->book[index];
+    Borrower *next = book->borrowListHead;
+    Borrower *temp = next;
+    while(next != NULL){
+        temp = next;
+        next = next->next;
+    }
+    if(temp == NULL)
+        book->borrowListHead = borrower;
+    else
+        temp->next = borrower;
+    book->presentNum--;
+}
+
+void showBook(BookTree bt,Result *r){
+    Book book;
+    int key;
+    int i = 1;
+    Borrower *next;
+
+    printf("\n\n请输入要查找的书号:");
+    scanf("%d" ,&key);
+    printf("\n\n查找结果: \n--------------------------------------------------------------------");
+
+    SearchNode(bt ,key ,r);
+    if(r->flag == 0)
+        printf("\n抱歉，该树没有该书!");
+    else {
+        book.id = r->node->book[r->index]->id;
+        book.name = r->node->book[r->index]->name;
+        book.author = r->node->book[r->index]->author;
+        book.presentNum = r->node->book[r->index]->presentNum;
+        book.totalNum = r->node->book[r->index]->totalNum;
+        book.borrowListHead = r->node->book[r->index]->borrowListHead;
+        next = book.borrowListHead;
+
+        printf("\n书号:%d,作者:%s,书名:%s,现存量:%d,总库存:%d",book.id,book.author,book.name,book.presentNum,book.totalNum);
+        printf("\n\n该书被借阅的情况为:");
+
+        if(next == NULL)
+            printf("\n暂无借阅情况");
+        else {
+            while(next != NULL){
+                printf("\n借阅%d---姓名:%s,借阅证:%d,归还期限:%d-%d-%d",i++,next->name,next->borrowId,next->date->tm_year+1900,next->date->tm_mon+1,next->date->tm_mday);
+                next = next->next;
+            }
+        }
+
+    }
+    printf("\n--------------------------------------------------------------------\n\n");
+}
