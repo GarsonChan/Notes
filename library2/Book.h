@@ -1,5 +1,5 @@
 //
-// Created by wxs on 2017/12/9.
+// Created by Garson on 2017/12/9.
 //
 #include <time.h>
 
@@ -15,6 +15,11 @@ typedef struct Borrower{
     struct Borrower *next;
 }Borrower;
 
+typedef struct ReserveInfo{
+    Borrower *borrower;//预约人
+    time_t date;//预约时间
+}ReserveInfo;
+
 typedef struct Book{
     int id;//书号
     char *name;//书名
@@ -22,6 +27,7 @@ typedef struct Book{
     int presentNum;//现存量
     int totalNum;//总库存
     struct Borrower *borrowListHead;//借阅链表
+    struct ReserveInfo *reserveInfo;//预约信息
 }Book;
 
 typedef struct BookNode{
@@ -56,13 +62,17 @@ void DeleteKey(BookTree *bt ,BookNode *node,int index);
 //显示树
 void showBookTree(BookNode *bt ,int height);
 
+//添加书籍
 void addBook(BookTree *bt,Result *r);
-
+//删除书籍
 void deleteBook(BookTree *bt,Result *r);
-
+//借阅书籍
 void borrowBook(BookTree *bt,Result *r);
-
+//归还书籍
 void returnBook(BookTree *bt,Result *r);
-
+//查看书籍
 void showBook(BookTree bt,Result *r);
 
+void showBookByAuthor(BookNode *bt);
+
+void reserveBook(BookTree *bt,Result *r);

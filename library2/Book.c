@@ -1,5 +1,5 @@
 //
-// Created by wxs on 2017/12/9.
+// Created by Garson on 2017/12/9.
 //
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,6 +7,123 @@
 #include <time.h>
 #include <string.h>
 #include "Book.h"
+
+void logBookInfo(Book book, int insert ,int new){
+    FILE *logFile;
+    char *info,*t;
+    time_t now;
+    struct tm *tm;
+
+    if((logFile = fopen("D:\\java\\log.txt" ,"a+")) == NULL){
+        printf("\n没有该文件");
+        return;
+    }else {
+        info = (char*)malloc(200* sizeof(char));
+        t = (char*)malloc(10* sizeof(char));
+        now = time(&now);
+        tm = localtime(&now);
+        if(insert == 1){
+            if(new == 1){
+                strcpy(info,"\n\n新添加了一本书《");
+                strcat(info ,book.name);
+                strcat(info ,"》，作者为");
+                strcat(info ,book.author);
+                strcat(info ,"-----");
+            }else{
+                strcpy(info,"\n\n添加了一本《");
+                strcat(info ,book.name);
+                strcat(info ,"》-----");
+            }
+            //添加时间
+            strcat(info ,itoa(tm->tm_year+1900,t,10));
+            strcat(info ,"年");
+            strcat(info ,itoa(tm->tm_mon+1,t,10));
+            strcat(info ,"月");
+            strcat(info ,itoa(tm->tm_mday,t,10));
+            strcat(info ,"日");
+            strcat(info ,itoa(tm->tm_hour,t,10));
+            strcat(info ,":");
+            strcat(info ,itoa(tm->tm_min,t,10));
+            strcat(info ,":");
+            strcat(info ,itoa(tm->tm_sec,t,10));
+        } else {
+            strcpy(info,"\n\n删除了书籍《");
+            strcat(info ,book.name);
+            strcat(info ,"》-----");
+            strcat(info ,itoa(tm->tm_year+1900,t,10));
+            strcat(info ,"年");
+            strcat(info ,itoa(tm->tm_mon+1,t,10));
+            strcat(info ,"月");
+            strcat(info ,itoa(tm->tm_mday,t,10));
+            strcat(info ,"日");
+            strcat(info ,itoa(tm->tm_hour,t,10));
+            strcat(info ,":");
+            strcat(info ,itoa(tm->tm_min,t,10));
+            strcat(info ,":");
+            strcat(info ,itoa(tm->tm_sec,t,10));
+        }
+        fputs(info ,logFile);
+        fclose(logFile);
+    }
+}
+void logBorrowInfo(Borrower borrower ,Book book, int borrow){
+    FILE *logFile;
+    char *info,*t;
+    time_t now;
+    struct tm *tm;
+
+    if((logFile = fopen("D:\\java\\log.txt" ,"a+")) == NULL){
+        printf("\n没有该文件");
+        return;
+    }else {
+        info = (char*)malloc(200* sizeof(char));
+        t = (char*)malloc(10* sizeof(char));
+        now = time(&now);
+        tm = localtime(&now);
+        if(borrow == 1){
+            strcpy(info,"\n\n");
+            strcat(info ,borrower.name);
+            strcat(info ,"借阅了一本《");
+            strcat(info ,book.name);
+            strcat(info ,"》-----");
+
+            //添加时间
+            strcat(info ,itoa(tm->tm_year+1900,t,10));
+            strcat(info ,"年");
+            strcat(info ,itoa(tm->tm_mon+1,t,10));
+            strcat(info ,"月");
+            strcat(info ,itoa(tm->tm_mday,t,10));
+            strcat(info ,"日");
+            strcat(info ,itoa(tm->tm_hour,t,10));
+            strcat(info ,":");
+            strcat(info ,itoa(tm->tm_min,t,10));
+            strcat(info ,":");
+            strcat(info ,itoa(tm->tm_sec,t,10));
+        } else {
+            strcpy(info,"\n\n");
+            strcat(info ,borrower.name);
+            strcat(info ,"归还了一本《");
+            strcat(info ,book.name);
+            strcat(info ,"》-----");
+
+            strcat(info ,itoa(tm->tm_year+1900,t,10));
+            strcat(info ,"年");
+            strcat(info ,itoa(tm->tm_mon+1,t,10));
+            strcat(info ,"月");
+            strcat(info ,itoa(tm->tm_mday,t,10));
+            strcat(info ,"日");
+            strcat(info ,itoa(tm->tm_hour,t,10));
+            strcat(info ,":");
+            strcat(info ,itoa(tm->tm_min,t,10));
+            strcat(info ,":");
+            strcat(info ,itoa(tm->tm_sec,t,10));
+        }
+        fputs(info ,logFile);
+        fclose(logFile);
+    }
+
+
+}
 
 //初始化B树
 void InitBookTree(BookTree *bt){
@@ -16,10 +133,6 @@ void InitBookTree(BookTree *bt){
     bt->minNode = ceil(min)-1; //ceil向上取整函数
     bt->splitNode = (m+1)/2; //设置分裂点下标
     bt->root = NULL;
-    printf("\n\n初始化结果: \n--------------------------------------------------------------------");
-    printf("\n树的地址:%p ,                树的根结点地址:%p;" ,bt,bt->root);
-    printf("\n树的结点关键词的最大个数:%d ,树的结点关键词的最小个数:%f;",bt->maxNode,bt->minNode);
-    printf("\n--------------------------------------------------------------------\n\n");
 }
 
 //查找关键词
@@ -58,7 +171,6 @@ void SearchNode(BookTree bt,int key,Result *r){
 //插入关键词
 void AddNewRoot(BookTree *bt,BookNode *child1,BookNode *child2,int key,Book *book){
     BookNode *root = (BookNode*)malloc(sizeof(BookNode));
-    printf("\nroot:%p",root);
     root->key[1] = key;
     root->book[0] = NULL;
     root->book[1] = book;
@@ -146,7 +258,6 @@ void InsertKey(BookTree *bt,int key,Book *book,BookNode *p,int index){
                 //否则，进行分裂操作
             else {
                 newNode = (BookNode*)malloc(sizeof(BookNode));
-                printf("\nnewNode:%p",newNode);
                 //分裂
                 SplitNode(p ,splitNode ,newNode);
 
@@ -170,11 +281,10 @@ void InsertKey(BookTree *bt,int key,Book *book,BookNode *p,int index){
 //删除关键词
 BookNode* FindKey(BookNode *p ,int index){
 
-    printf("\nFindKey");
-
     BookNode *child = p->child[index - 1];
     BookNode *node = p;
     Borrower *next = p->book[index]->borrowListHead ,*temp;
+    ReserveInfo *reserveInfo = p->book[index]->reserveInfo;
 
     while(child != NULL){
         node = child;
@@ -183,6 +293,7 @@ BookNode* FindKey(BookNode *p ,int index){
 
     p->key[index] = node->key[node->keyNum];
 
+    //删除借阅的结点
     temp = next;
     while(temp != NULL){
         temp = next;
@@ -191,21 +302,20 @@ BookNode* FindKey(BookNode *p ,int index){
         next = next->next;
         free(temp);
     }
-    printf("\n%p",p->book[index]);
+    //删除预约结点
+    if(reserveInfo != NULL)
+        free(reserveInfo);
+
     free(p->book[index]);
     p->book[index] = NULL;
     p->book[index] = node->book[node->keyNum];
     node->book[node->keyNum] = NULL;
     node->key[node->keyNum] = 0;
 
-    printf("\nFindKey end");
-
     return node;
 }
 //合并结点和其左兄弟或右兄弟
 void Merge(BookTree *bt ,BookNode *left, BookNode *right, int index){
-
-    printf("\nMerge");
 
     int i;
     double min = bt->minNode;
@@ -220,7 +330,7 @@ void Merge(BookTree *bt ,BookNode *left, BookNode *right, int index){
     memcpy(left->key + left->keyNum + 1,right->key + 1, right->keyNum*sizeof(int));
     memcpy(left->book + left->keyNum + 1,right->book + 1,right->keyNum*sizeof(Book*));
     memcpy(left->child + left->keyNum ,right->child, (right->keyNum+1)*sizeof(BookNode*));
-    printf("\nMerge end1");
+
     //将右兄弟的孩子的parent指针指向左兄弟
     for(i = 0; i <= right->keyNum; i++){
         if(right->child[i] != NULL){
@@ -228,23 +338,20 @@ void Merge(BookTree *bt ,BookNode *left, BookNode *right, int index){
         }
     }
     left->keyNum += right->keyNum;//增加左兄弟的关键词个数
-    printf("\nMerge end2");
+
     //因为双亲结点一个关键词合并到了左孩子上，所以双亲结点的关键词以及孩子指针往左移
     for(i = index; i < parent->keyNum-1; i++){
         parent->key[i+1] = parent->key[i+2];
         parent->book[i+1] = parent->book[i+2];
         parent->child[i+1] = parent->child[i+2];
     }
-    printf("\nMerge end3");
+
     parent->key[i+1] = 0;
     parent->book[i+1] = NULL;
     parent->child[i+1] = NULL;
     parent->keyNum--;
-    printf("\nMerge end4");
 
     free(right);
-
-    printf("\nMerge end");
 
     //如果此时的双亲结点关键词个数小于min，则对双亲结点进行合并或借关键词操作
     if(parent->keyNum < min)
@@ -253,10 +360,7 @@ void Merge(BookTree *bt ,BookNode *left, BookNode *right, int index){
         return;
 }
 //判断要和左兄弟还是右兄弟进行操作
-void Borrow(BookTree *bt ,BookNode *p ,BookNode *bro, BookNode *parent, int left ,int right,int index){
-
-    printf("\nBorrow");
-
+void Borrow(BookTree *bt ,BookNode *p ,BookNode *bro, BookNode *parent, int left ,int index){
     //index表示结点p的双亲的结点第index个孩子
     int borrowKey;
     int t;//记录父结点的跳转关键词
@@ -339,11 +443,8 @@ void Borrow(BookTree *bt ,BookNode *p ,BookNode *bro, BookNode *parent, int left
         bro->child[k] = NULL;
         bro->keyNum--;
     }
-    printf("\nMerge end");
 }
 void ChooseLeftOrRight(BookTree *bt ,BookNode *p ,BookNode *parent){
-
-    printf("\nChoose");
 
     int index;
 
@@ -355,9 +456,7 @@ void ChooseLeftOrRight(BookTree *bt ,BookNode *p ,BookNode *parent){
                 p->child[0]->parent = NULL;
             }else
                 bt->root = NULL;
-            printf("\n%p",p);
             free(p);
-            p = NULL;
         }
         return;
     }
@@ -369,16 +468,13 @@ void ChooseLeftOrRight(BookTree *bt ,BookNode *p ,BookNode *parent){
 
     if(index == parent->keyNum)
         //如果该结点是双亲结点的最后一个孩子，那么就和它的左兄弟借
-        Borrow(bt ,p ,parent->child[index-1] ,parent,1,0,index);
+        Borrow(bt ,p ,parent->child[index-1] ,parent,1,index);
     else
         //否则就和右兄弟借
-        Borrow(bt ,p ,parent->child[index+1] ,parent,0,1,index);
-    printf("\nMerge end");
+        Borrow(bt ,p ,parent->child[index+1] ,parent,0,index);
 
 }
 void RemoveKey(BookTree *bt,BookNode *p,int index) {
-
-    printf("\nRemove key");
 
     //删除关键字，可能是0(经过FindKey接口)
     p->key[index] = p->key[p->keyNum];
@@ -395,8 +491,6 @@ void RemoveKey(BookTree *bt,BookNode *p,int index) {
         ChooseLeftOrRight(bt ,p ,p->parent);
     }
 
-    printf("\nRemove end");
-
 }
 void DeleteKey(BookTree *bt ,BookNode *p ,int index){
 
@@ -409,7 +503,6 @@ void DeleteKey(BookTree *bt ,BookNode *p ,int index){
         RemoveKey(bt ,p,index);
     }
 }
-
 //显示树的形状
 void showBookTree(BookNode *bt ,int height){
     if(NULL != bt){
@@ -447,23 +540,25 @@ void addBook(BookTree *bt,Result *r){
 
     if(r->flag == 1){
         printf("\n\n该书号已存在，书名为:%s",r->node->book[r->index]->name);
-        printf("\n你是否要增加该书的库存？");
+        printf("\n你是否要增加该书的库存？请输入1或0（1代表是，0代表否）");
         scanf("%d",&conti);
         switch(conti){
             case 1:
                 r->node->book[r->index]->presentNum++;
                 r->node->book[r->index]->totalNum++;
-                printf("\n\n%s库存加一\n",r->node->book[r->index]->name);
+                logBookInfo(*(r->node->book[r->index]),1,0);
+                printf("\n\n%s库存加1\n",r->node->book[r->index]->name);
                 break;
             case 0:
+                break;
+            default:
+                printf("\n请输入0或1\n");
                 break;
         }
         return;
     }
     else {
-
         newBook = (Book*)malloc(sizeof(Book));
-        printf("\nnewBook:%p",newBook);
         newBookName = (char*)malloc(30*sizeof(char));
         newBookAuthor = (char*)malloc(30*sizeof(char));
 
@@ -475,6 +570,7 @@ void addBook(BookTree *bt,Result *r){
         scanf("%s",newBookAuthor);
         newBook->author = newBookAuthor;
         newBook->borrowListHead = NULL;
+        newBook->reserveInfo = NULL;
 
         printf("\n\n添加结果: \n--------------------------------------------------------------------");
         newBook->presentNum = 1;
@@ -483,6 +579,7 @@ void addBook(BookTree *bt,Result *r){
         showBookTree(bt->root ,1);
         printf("\n--------------------------------------------------------------------\n\n");
         printf("\n添加成功");
+        logBookInfo(*newBook,1,1);
     }
 }
 
@@ -498,6 +595,7 @@ void deleteBook(BookTree *bt,Result *r){
     if(r->flag == 0)
         printf("\n抱歉，该树中没有该书籍!");
     else {
+        logBookInfo(*(r->node->book[r->index]) ,0 ,0);
         DeleteKey(bt ,r->node ,r->index);
         showBookTree(bt->root ,1);
     }
@@ -523,6 +621,7 @@ void addBorrow(BookNode *p ,int index,Borrower *borrower){
         temp->next = borrower;
     book->presentNum--;
     printf("\n借阅成功");
+    logBorrowInfo(*borrower ,*book ,1);
 }
 void borrowBook(BookTree *bt,Result *r){
     int borrowId,key;
@@ -541,7 +640,6 @@ void borrowBook(BookTree *bt,Result *r){
     else {
         name = (char*)malloc(30*sizeof(char));
         borrower = (Borrower*)malloc(sizeof(Borrower));
-        printf("\nborrower:%p",borrower);
         time_t now = time(&now)+10;
 
         printf("\n\n请输入您的借阅图书账号:");
@@ -559,7 +657,25 @@ void borrowBook(BookTree *bt,Result *r){
     }
 }
 
-void deleteBorrow(BookNode *p, int index ,char *name ,int borrowId){
+//执行预约结果操作
+void deleteReserve(BookNode *p ,int index){
+    time_t now;
+    Borrower *borrower;
+    ReserveInfo *reserveInfo = p->book[index]->reserveInfo;
+
+    if(reserveInfo != NULL){
+        now = time(&now);
+        borrower = reserveInfo->borrower;
+        borrower->date = now;
+        borrower->next = NULL;
+        addBorrow(p ,index ,borrower);
+        free(reserveInfo);
+        p->book[index]->reserveInfo = NULL;
+    }
+}
+
+//归还书籍
+void deleteBorrow(BookNode *p, int index ,int borrowId){
     Borrower *head = p->book[index]->borrowListHead;
     Borrower *temp = head ,*t = NULL;
 
@@ -585,16 +701,18 @@ void deleteBorrow(BookNode *p, int index ,char *name ,int borrowId){
         else
             p->book[index]->borrowListHead = NULL;
         p->book[index]->presentNum++;
-        free(temp);
     } else {
         p->book[index]->presentNum++;
         t->next = temp->next;
         temp->next = NULL;
-        free(temp);
     }
+    logBorrowInfo(*temp ,*(p->book[index]),0);
+    free(temp);
     printf("\n归还成功");
-}
 
+    //其他人归还时如果有预约就借出去
+    deleteReserve(p ,index);
+}
 void returnBook(BookTree *bt,Result *r){
     int borrowId,key;
     char *name;
@@ -615,7 +733,7 @@ void returnBook(BookTree *bt,Result *r){
         printf("\n\n请输入您的姓名:");
         scanf("%s" ,name);
 
-        deleteBorrow(r->node,r->index,name,borrowId);
+        deleteBorrow(r->node,r->index,borrowId);
     }
 }
 
@@ -642,6 +760,7 @@ void showBook(BookTree bt,Result *r){
         book.author = r->node->book[r->index]->author;
         book.presentNum = r->node->book[r->index]->presentNum;
         book.totalNum = r->node->book[r->index]->totalNum;
+        book.reserveInfo = r->node->book[r->index]->reserveInfo;
         book.borrowListHead = r->node->book[r->index]->borrowListHead;
         next = book.borrowListHead;
 
@@ -670,9 +789,93 @@ void showBook(BookTree bt,Result *r){
                 }
             }
         }
-
+        printf("\n\n此书被预约情况：");
+        if(book.reserveInfo){
+            tm = localtime(&book.reserveInfo->date);
+            printf("\n预约人:%s ,预约时间:%d-%d-%d %d:%d:%d",book.reserveInfo->borrower->name,tm->tm_year+1900,tm->tm_mon+1,tm->tm_mday,tm->tm_hour,tm->tm_min,tm->tm_sec);
+        } else
+            printf("\n此书暂没被预约");
     }
     printf("\n--------------------------------------------------------------------\n\n");
 }
 
+//显示某作者的全部著作
+void showAuthorBook(BookNode *bt,char *author){
+    if(NULL != bt){
+        for(int i = 1;i <= bt->keyNum; i++){
+            if(strcmp(author ,bt->book[i]->author) == 0)
+                printf("《%s》\t",bt->book[i]->name);
+        }
+    }
+    else return ;
 
+    for(int j = 0;j <= bt->keyNum;j++){
+        if(NULL != bt->child[j]){
+            showAuthorBook(bt->child[j] ,author);
+        }
+    }
+}
+void showBookByAuthor(BookNode *bt){
+    char *author = (char*)malloc(30* sizeof(char));
+    printf("\n\n请输入作者名：");
+    scanf("%s",author);
+    printf("\n\n结果为：\n\n");
+    showAuthorBook(bt ,author);
+}
+
+//预约书籍
+void addReserve(Book *book ,Borrower *borrower) {
+    ReserveInfo *reserveInfo;
+    time_t now;
+
+    //判断是否借阅了此书
+    Borrower *head = book->borrowListHead;
+    Borrower *next = head->next;
+    while(next != NULL){
+        if(next->borrowId == borrower->borrowId){
+            printf("\n您已借阅此书，请勿进行预约");
+            return;
+        } else
+            next = next->next;
+    }
+
+    now = time(&now);
+    reserveInfo = (ReserveInfo*)malloc(sizeof(ReserveInfo));
+    reserveInfo->borrower = borrower;
+    reserveInfo->date = now;
+    book->reserveInfo = reserveInfo;
+    printf("\n\n预约成功！");
+}
+void reserveBook(BookTree *bt,Result *r){
+    Borrower *borrower;
+    int key,borrowId;
+    char *name;
+    printf("\n\n请输入您要预约借阅的书籍：");
+    scanf("%d",&key);
+
+    SearchNode(*bt ,key ,r);
+
+    if(r->flag == 0){
+        printf("\n抱歉，没有此书");
+        return;
+    }else {
+        if(r->node->book[r->index]->reserveInfo != NULL){
+            printf("\n\n抱歉，此书已被预约借阅");
+            return;
+        }else {
+            borrower = (Borrower*)malloc(sizeof(Borrower));
+            name = (char*)malloc(30* sizeof(char));
+            printf("\n请输入您的借阅证号:");
+            scanf("%d",&borrowId);
+            printf("\n请输入您的姓名:");
+            scanf("%s",name);
+
+            borrower->borrowId = borrowId;
+            borrower->name = name;
+
+            addReserve(r->node->book[r->index] ,borrower);
+
+        }
+
+    }
+}
