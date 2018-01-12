@@ -1,14 +1,20 @@
 //
 // Created by Garson on 2017/12/9.
 //
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <time.h>
-#include <string.h>
+
 #include "Book.h"
 
+int isStringFit(char* string){
+    int length=strlen(string);
+    if(length > 0 && length <= 20)
+        return 1;
+    else
+        return 0;
+}
+
+//记录书籍增删操作
 void logBookInfo(Book book, int insert ,int new){
+    printf("\nlog");
     FILE *logFile;
     char *info,*t;
     time_t now;
@@ -19,7 +25,17 @@ void logBookInfo(Book book, int insert ,int new){
         return;
     }else {
         info = (char*)malloc(200* sizeof(char));
+        if(NULL == info){
+            printf("\n抱歉，系统出错，请重试");
+            return;
+        }
+
         t = (char*)malloc(10* sizeof(char));
+        if(NULL == t){
+            printf("\n抱歉，系统出错，请重试");
+            return;
+        }
+
         now = time(&now);
         tm = localtime(&now);
         if(insert == 1){
@@ -64,8 +80,10 @@ void logBookInfo(Book book, int insert ,int new){
         }
         fputs(info ,logFile);
         fclose(logFile);
+        printf("\nlog");
     }
 }
+//记录书籍借阅操作
 void logBorrowInfo(Borrower borrower ,Book book, int borrow){
     FILE *logFile;
     char *info,*t;
@@ -77,7 +95,17 @@ void logBorrowInfo(Borrower borrower ,Book book, int borrow){
         return;
     }else {
         info = (char*)malloc(200* sizeof(char));
+        if(NULL == info){
+            printf("\n抱歉，系统出错，请重试");
+            return;
+        }
+
         t = (char*)malloc(10* sizeof(char));
+        if(NULL == t){
+            printf("\n抱歉，系统出错，请重试");
+            return;
+        }
+
         now = time(&now);
         tm = localtime(&now);
         if(borrow == 1){
@@ -121,8 +149,6 @@ void logBorrowInfo(Borrower borrower ,Book book, int borrow){
         fputs(info ,logFile);
         fclose(logFile);
     }
-
-
 }
 
 //初始化B树
@@ -258,6 +284,10 @@ void InsertKey(BookTree *bt,int key,Book *book,BookNode *p,int index){
                 //否则，进行分裂操作
             else {
                 newNode = (BookNode*)malloc(sizeof(BookNode));
+                if(NULL == newNode){
+                    printf("\n抱歉，系统出错，请重试");
+                    return;
+                }
                 //分裂
                 SplitNode(p ,splitNode ,newNode);
 
@@ -503,6 +533,7 @@ void DeleteKey(BookTree *bt ,BookNode *p ,int index){
         RemoveKey(bt ,p,index);
     }
 }
+
 //显示树的形状
 void showBookTree(BookNode *bt ,int height){
     if(NULL != bt){
@@ -529,19 +560,25 @@ void addBook(BookTree *bt,Result *r){
 
     int key;
     int conti;
-    Book *newBook;
+    Book *newBook1;
     char *newBookName;
     char *newBookAuthor;
 
     printf("\n\n请输入要添加书籍的id:");
-    scanf("%d" ,&key);
+    if(scanf("%d", &key)!=1){
+        printf("\n请输入数字");
+        return;
+    }
 
     SearchNode(*bt ,key ,r);
 
     if(r->flag == 1){
         printf("\n\n该书号已存在，书名为:%s",r->node->book[r->index]->name);
         printf("\n你是否要增加该书的库存？请输入1或0（1代表是，0代表否）");
-        scanf("%d",&conti);
+        if(scanf("%d",&conti)!=1){
+            printf("\n请输入数字");
+            return;
+        }
         switch(conti){
             case 1:
                 r->node->book[r->index]->presentNum++;
@@ -558,28 +595,52 @@ void addBook(BookTree *bt,Result *r){
         return;
     }
     else {
-        newBook = (Book*)malloc(sizeof(Book));
-        newBookName = (char*)malloc(30*sizeof(char));
-        newBookAuthor = (char*)malloc(30*sizeof(char));
 
-        newBook->id = key;
+        newBookName = (char*)malloc(30*sizeof(char));//8个字节，最后一个为\0
+        if(NULL == newBookName){
+            printf("\n抱歉，系统出错，请重试");
+            return;
+        }
         printf("\n\n请输入该书的书名:");
         scanf("%s",newBookName);
-        newBook->name = newBookName;
+        if(!isStringFit(newBookName)){
+            printf("\n书名长度在0~10个汉字或20个其他字符之间");
+            //free(newBookName);
+            return;
+        }
+
+        newBookAuthor = (char*)malloc(30*sizeof(char));
+        if(NULL == newBookAuthor){
+            printf("\n抱歉，系统出错，请重试");
+            return;
+        }
         printf("\n\n请输入该书的作者:");
         scanf("%s",newBookAuthor);
-        newBook->author = newBookAuthor;
-        newBook->borrowListHead = NULL;
-        newBook->reserveInfo = NULL;
+        if(!isStringFit(newBookAuthor)){
+            printf("\n作者名称长度在0~10个汉字或20个其他字符之间");
+            return;
+        }
+
+        newBook1 = (Book*)malloc(sizeof(Book));
+        if(NULL == newBook1){
+            printf("\n抱歉，系统出错，请重试");
+            return;
+        }
+
+        newBook1->id = key;
+        newBook1->name = newBookName;
+        newBook1->author = newBookAuthor;
+        newBook1->borrowListHead = NULL;
+        newBook1->reserveInfo = NULL;
 
         printf("\n\n添加结果: \n--------------------------------------------------------------------");
-        newBook->presentNum = 1;
-        newBook->totalNum = 1;
-        InsertKey(bt ,key ,newBook,r->node,r->index);
+        newBook1->presentNum = 1;
+        newBook1->totalNum = 1;
+        InsertKey(bt ,key ,newBook1,r->node,r->index);
         showBookTree(bt->root ,1);
         printf("\n--------------------------------------------------------------------\n\n");
         printf("\n添加成功");
-        logBookInfo(*newBook,1,1);
+        logBookInfo(*newBook1,1,1);
     }
 }
 
@@ -589,6 +650,12 @@ void deleteBook(BookTree *bt,Result *r){
 
     printf("\n\n请输入要删除的书籍id:");
     scanf("%d" ,&key);
+
+    if(scanf("%d", &key)!=1){
+        printf("\n请输入数字");
+        return;
+    }
+
     printf("\n\n删除结果: \n--------------------------------------------------------------------");
 
     SearchNode(*bt ,key,r);
@@ -629,7 +696,10 @@ void borrowBook(BookTree *bt,Result *r){
     Borrower *borrower;
 
     printf("\n\n请输入要借阅的书籍id:");
-    scanf("%d" ,&key);
+    if(scanf("%d", &key)!=1){
+        printf("\n请输入数字");
+        return;
+    }
 
     SearchNode(*bt ,key ,r);
 
@@ -638,15 +708,31 @@ void borrowBook(BookTree *bt,Result *r){
     else if(r->node->book[r->index]->presentNum < 1)
         printf("\n\n抱歉，该书籍现存量为0，无法被借阅");
     else {
-        name = (char*)malloc(30*sizeof(char));
-        borrower = (Borrower*)malloc(sizeof(Borrower));
-        time_t now = time(&now)+10;
-
         printf("\n\n请输入您的借阅图书账号:");
-        scanf("%d" ,&borrowId);
+        if(scanf("%d", &borrowId)!=1){
+            printf("\n请输入数字");
+            return;
+        }
 
+        name = (char*)malloc(30*sizeof(char));
+        if(NULL == name){
+            printf("\n抱歉，系统出错，请重试");
+            return;
+        }
         printf("\n\n请输入您的姓名:");
         scanf("%s" ,name);
+        if(!isStringFit(name)){
+            printf("\n作者名称长度在0~10个汉字或20个其他字符之间");
+            return;
+        }
+
+        borrower = (Borrower*)malloc(sizeof(Borrower));
+        if(NULL == borrower){
+            printf("\n抱歉，系统出错，请重试");
+            return;
+        }
+
+        time_t now = time(&now)+10;
 
         borrower->borrowId = borrowId;
         borrower->name = name;
@@ -718,20 +804,34 @@ void returnBook(BookTree *bt,Result *r){
     char *name;
 
     printf("\n\n请输入要归还的书籍id:");
-    scanf("%d" ,&key);
+    if(scanf("%d" ,&key)!=1){
+        printf("\n请输入数字");
+        return;
+    }
 
     SearchNode(*bt ,key ,r);
 
     if(r->flag == 0)
         printf("\n\n抱歉，没有该书籍");
     else {
-        name = (char*)malloc(30*sizeof(char));
 
         printf("\n\n请输入您的借阅图书账号:");
-        scanf("%d" ,&borrowId);
+        if(scanf("%d" ,&borrowId)!=1){
+            printf("\n请输入数字");
+            return;
+        }
 
+        name = (char*)malloc(30*sizeof(char));
+        if(NULL == name){
+            printf("\n抱歉，系统出错，请重试");
+            return;
+        }
         printf("\n\n请输入您的姓名:");
         scanf("%s" ,name);
+        if(!isStringFit(name)){
+            printf("\n作者名称长度在0~10个汉字或20个其他字符之间");
+            return;
+        }
 
         deleteBorrow(r->node,r->index,borrowId);
     }
@@ -747,7 +847,10 @@ void showBook(BookTree bt,Result *r){
     Borrower *next;
 
     printf("\n\n请输入要查找的书号:");
-    scanf("%d" ,&key);
+    if(scanf("%d" ,&key)!=1){
+        printf("\n请输入数字");
+        return;
+    }
     printf("\n\n查找结果: \n--------------------------------------------------------------------");
 
     SearchNode(bt ,key ,r);
@@ -807,7 +910,8 @@ void showAuthorBook(BookNode *bt,char *author){
                 printf("《%s》\t",bt->book[i]->name);
         }
     }
-    else return ;
+    else
+        return ;
 
     for(int j = 0;j <= bt->keyNum;j++){
         if(NULL != bt->child[j]){
@@ -817,8 +921,16 @@ void showAuthorBook(BookNode *bt,char *author){
 }
 void showBookByAuthor(BookNode *bt){
     char *author = (char*)malloc(30* sizeof(char));
+    if(author == NULL){
+        printf("\n抱歉，系统出错，请重试");
+        return;
+    }
     printf("\n\n请输入作者名：");
     scanf("%s",author);
+    if(!isStringFit(author)){
+        printf("\n作者名称长度在0~10个汉字或20个其他字符之间");
+        return;
+    }
     printf("\n\n结果为：\n\n");
     showAuthorBook(bt ,author);
 }
@@ -830,7 +942,13 @@ void addReserve(Book *book ,Borrower *borrower) {
 
     //判断是否借阅了此书
     Borrower *head = book->borrowListHead;
-    Borrower *next = head->next;
+
+    if(NULL == head || book->presentNum != 0){
+        printf("\n该书仍然有库存，可直接进行借阅，无需预约\n");
+        return;
+    }
+
+    Borrower *next = head;
     while(next != NULL){
         if(next->borrowId == borrower->borrowId){
             printf("\n您已借阅此书，请勿进行预约");
@@ -851,7 +969,10 @@ void reserveBook(BookTree *bt,Result *r){
     int key,borrowId;
     char *name;
     printf("\n\n请输入您要预约借阅的书籍：");
-    scanf("%d",&key);
+    if(scanf("%d",&key) != 1){
+        printf("\n请输入数字");
+        return;
+    }
 
     SearchNode(*bt ,key ,r);
 
@@ -860,16 +981,32 @@ void reserveBook(BookTree *bt,Result *r){
         return;
     }else {
         if(r->node->book[r->index]->reserveInfo != NULL){
-            printf("\n\n抱歉，此书已被预约借阅");
+            printf("\n抱歉，此书已被预约借阅");
             return;
         }else {
-            borrower = (Borrower*)malloc(sizeof(Borrower));
-            name = (char*)malloc(30* sizeof(char));
             printf("\n请输入您的借阅证号:");
-            scanf("%d",&borrowId);
+            if(scanf("%d", &borrowId)!=1){
+                printf("\n请输入数字");
+                return;
+            }
+
+            name = (char*)malloc(30* sizeof(char));
+            if(NULL == name){
+                printf("\n抱歉，系统出错，请重试");
+                return;
+            }
             printf("\n请输入您的姓名:");
             scanf("%s",name);
+            if(!isStringFit(name)){
+                printf("\n作者名称长度在0~10个汉字或20个其他字符之间");
+                return;
+            }
 
+            borrower = (Borrower*)malloc(sizeof(Borrower));
+            if(NULL == borrower){
+                printf("\n抱歉，系统出错，请重试");
+                return;
+            }
             borrower->borrowId = borrowId;
             borrower->name = name;
 
@@ -879,3 +1016,5 @@ void reserveBook(BookTree *bt,Result *r){
 
     }
 }
+
+

@@ -6,6 +6,11 @@
 #ifndef _Book_H
 #define _Book_H
 #define m 3
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <time.h>
+#include <string.h>
 #endif // _Book_H
 
 typedef struct Borrower{
@@ -72,7 +77,7 @@ void borrowBook(BookTree *bt,Result *r);
 void returnBook(BookTree *bt,Result *r);
 //查看书籍
 void showBook(BookTree bt,Result *r);
-
+//查阅某作者的书籍
 void showBookByAuthor(BookNode *bt);
-
+//预约书籍
 void reserveBook(BookTree *bt,Result *r);

@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include "Book.h"
 
 int main()
@@ -7,17 +6,23 @@ int main()
     int select;
     Result r;
     InitBookTree(&bt);
-
+    printf("\n班级：16级网络工程二班");
+    printf("\n姓名：陈嘉盛");
+    printf("\n学号：3116004946\n");
     while(1){
 
         printf("\n-------------------欢迎使用--------------------");
         printf("\n1.查找书籍        2.添加书籍");
         printf("\n3.删除书籍        4.借阅书籍");
         printf("\n5.归还书籍        6.查找某作者的书籍");
-        printf("\n7.退出程序");
+        printf("\n7.预约书籍        8.退出操作");
         printf("\n-----------------------------------------------");
         printf("\n请输入要操作的操作序号: ");
-        scanf("%d", &select);
+        fflush(stdin);
+        if(scanf("%d", &select)!=1){
+            printf("\n1");
+            continue;
+        }
 
         switch(select){
 
@@ -56,6 +61,7 @@ int main()
                 break;
         }
     }
+
 }
 
 
